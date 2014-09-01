@@ -28,9 +28,11 @@ case "$1" in
 	package=bit9-postfix
 
 	# link to virtual config parameters
-	db_set $packageroot/UID $(id -u $(db_get $packageroot/VMAIL;echo $RET))
+	vmail=$(db_input high $packageroot/VMAIL;db_go;db_get $packageroot/VMAIL;echo $RET)
+	useradd $vmail || true
+	db_set $packageroot/UID $(id -u $vmail)
 	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/uid medium
-	db_set $packageroot/GID $(id -u $(db_get $packageroot/VMAIL;echo $RET))
+	db_set $packageroot/GID $(id -u $vmail)
 	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/gid medium
 	ln -s /etc/$packageroot/$package/postfix/virtual /etc/postfix
 
