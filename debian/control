@@ -1,0 +1,12 @@
+Source: bit9-postfix
+Maintainer: Mark Williams (development) <mark@bit9.io>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 9)
+
+Package: bit9-postfix
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, sasl2-bin, postfix, bit9-core
+Description: Postfix mailbox setup and configuration
+ Custom configuration for bit9 includes whitelist/blacklist and virtual boxes

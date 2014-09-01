@@ -1,0 +1,24 @@
+Template: bit9/VMAIL
+Type: string
+Default: vmail
+Description: Owner/Group of virtual mail folder
+ Should have read/write privileges to the root mailbox folder
+
+Template: bit9/UID
+Type: string
+Default: 5000
+Description: Owner of virtual mail folder
+ Should have read/write privileges to the root mailbox folder
+
+Template: bit9/GID
+Type: string
+Default: 5000
+Description: Group of virtual mail folder
+ Should have read/write privileges to the root mailbox folder
+
+Template: bit9/SMTPKEYPASS
+Type: password
+Description: Private key passphrase for smtp STARTTLS
+ A certificate is generated from the passphrase which should be
+ accepted by SMTP clients when connecting
+
