@@ -46,12 +46,10 @@ case "$1" in
 	mv /etc/default/saslauthd /etc/default/saslauthd.bak || true
 	ln -s /etc/$packageroot/$package/default/saslauthd /etc/default/saslauthd
 
-        pass=$(db_input high $packageroot/SMTPKEYPASS;db_go;echo $RET)
-
         db_stop
 
-        openssl genrsa -des3 -passout pass:$pass -out /etc/ssl/private/smtpd.key 2048
-        openssl req -new -passin pass:$pass -key /etc/ssl/private/smtpd.key -subj "/C=US/ST=Texas/L=Austin/O=Global Security/OU=IT Department/CN=bit9.io" | openssl x509 -req -days 365 -passin pass:$pass -signkey /etc/ssl/private/smtpd.key -out /etc/ssl/certs/smtpd.crt
+        openssl genrsa -out /etc/ssl/private/smtpd.key 2048
+        openssl req -new -key /etc/ssl/private/smtpd.key -subj "/C=US/ST=Texas/L=Austin/O=Global Security/OU=IT Department/CN=bit9.io" | openssl x509 -req -days 365 -signkey /etc/ssl/private/smtpd.key -out /etc/ssl/certs/smtpd.crt
 
 	#build db's now
 	postmap /etc/$packageroot/$package/postfix/virtual/addresses
@@ -59,6 +57,10 @@ case "$1" in
 	postmap /etc/$packageroot/$package/postfix/virtual/uid
 	postmap /etc/$packageroot/$package/postfix/virtual/gid
 	postmap /etc/$packageroot/$package/postfix/sender_access
+
+	#current blacklist/whitelist
+	ln -s /etc/$packageroot/$package/postfix/sender_access /etc/postfix/sender_access
+	ln -s /etc/$packageroot/$package/postfix/sender_access.db /etc/postfix/sender_access.db
 
         service postfix restart
     ;;

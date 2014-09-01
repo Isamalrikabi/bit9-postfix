@@ -37,6 +37,10 @@ case "$1" in
  
 	rm -f /var/mail/virtual
 	rm -f /etc/default/saslauthd
+
+	rm -f /etc/postfix/sender_access
+	rm -f /etc/postfix/sender_access.db
+
     ;;
     *)
         echo "postrm called with unknown argument \`$1'" >&2
