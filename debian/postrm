@@ -25,17 +25,12 @@ case "$1" in
 
 	package=bit9/bit9-postfix
 
-	# replace override all default postfix configuration prefs
-	rm -f /etc/postfix/main.cf
-	mv /etc/postfix/main.cf.bak /etc/postfix/main.cf  || true
-
 	# remove link to virtual config parameters
 	rm -f /etc/postfix/virtual
 
 	# remove link to virtual mail box root
-	rm -rf /var/$package/mail/virtual
- 
 	rm -f /var/mail/virtual
+
 	rm -f /etc/default/saslauthd
 
 	rm -f /etc/postfix/sender_access

@@ -16,3 +16,13 @@ Default: 5000
 Description: Group of virtual mail folder
  Should have read/write privileges to the root mailbox folder
 
+Template: bit9/HOSTNAME
+Type: string
+Description: Local hostname for postfix
+ This is not the @<domains> handled by this server, that is for the virtualdomains list
+
+Template: bit9/VIRTUALDOMAINS
+Type: string
+Description: Virtual domains handled by this postfix (ex. someemail@<this virtual domain>)
+ Any virtual domains for incoming emails handled by this server
+

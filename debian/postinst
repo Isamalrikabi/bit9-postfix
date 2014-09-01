@@ -27,29 +27,51 @@ case "$1" in
 	packageroot=bit9
 	package=bit9-postfix
 
-	# override all default postfix configuration prefs
-	mv /etc/postfix/main.cf /etc/postfix/main.cf.bak || true
-	ln -s /etc/$packageroot/$package/postfix/main.cf /etc/postfix/main.cf
-
 	# link to virtual config parameters
 	db_set $packageroot/UID $(id -u $(db_get $packageroot/VMAIL;echo $RET))
 	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/uid medium
 	db_set $packageroot/GID $(id -u $(db_get $packageroot/VMAIL;echo $RET))
 	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/gid medium
-	ln -s /etc/$packageroot/$package/postfix/virtual /etc/postfix/virtual
+	ln -s /etc/$packageroot/$package/postfix/virtual /etc/postfix
 
 	# link to virtual mail box root
 	install -dD -o vmail -g vmail /var/$packageroot/$package/mail/virtual 
-	ln -s /var/$packageroot/$package/mail/virtual /var/mail/virtual
+	ln -s /var/$packageroot/$package/mail/virtual /var/mail
 
 	# override the sasl auth config to use preferred auth mechanism
 	mv /etc/default/saslauthd /etc/default/saslauthd.bak || true
-	ln -s /etc/$packageroot/$package/default/saslauthd /etc/default/saslauthd
+	ln -s /etc/$packageroot/$package/default/saslauthd /etc/default
+
+	#hostname=$(db_input high $packageroot/HOSTNAME;db_go;db_get $packageroot/HOSTNAME;echo $RET)
+	hostname=$(db_get postfix/mailname;echo $RET)
+	virtualdomains=$(db_input high $packageroot/VIRTUALDOMAINS;db_go;db_get $packageroot/VIRTUALDOMAINS;echo $RET)
 
         db_stop
 
-        openssl genrsa -out /etc/ssl/private/smtpd.key 2048
-        openssl req -new -key /etc/ssl/private/smtpd.key -subj "/C=US/ST=Texas/L=Austin/O=Global Security/OU=IT Department/CN=bit9.io" | openssl x509 -req -days 365 -signkey /etc/ssl/private/smtpd.key -out /etc/ssl/certs/smtpd.crt
+	key=/etc/ssl/private/smtpd.key
+	cert=/etc/ssl/certs/smtpd.crt
+
+        openssl genrsa -out $key 2048
+        openssl req -new -key $key -subj "/C=US/ST=Texas/L=Austin/O=Global Security/OU=IT Department/CN=bit9.io" | openssl x509 -req -days 365 -signkey $key -out $cert
+
+	#add starttls support, and map virtual dirs
+	postconf -e \
+		"smtpd_tls_cert_file = ${cert}" \
+		"smtpd_tls_key_file = ${key}" \
+		'smtpd_tls_security_level = may' \
+		'smtpd_tls_received_header = yes' \
+		'smtpd_tls_loglevel = 1' \
+		'smtp_tls_security_level = may' \
+		'smtp_tls_loglevel = 1' \
+		'smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache' \
+		'tls_random_source = dev:/dev/urandom' \
+		"myhostname = ${hostname}" \
+		'mydestination = localhost.localdomain, localhost' \
+		"virtual_mailbox_domains = ${virtualdomains}" \
+		'virtual_mailbox_base = /var/mail/virtual' \
+		'virtual_mailbox_maps = hash:/etc/postfix/virtual/mailbox' \
+		'virtual_uid_maps = hash:/etc/postfix/virtual/uid' \
+		'virtual_gid_maps = hash:/etc/postfix/virtual/gid'
 
 	#build db's now
 	postmap /etc/$packageroot/$package/postfix/virtual/addresses
