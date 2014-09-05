@@ -30,23 +30,41 @@ case "$1" in
 	# link to virtual config parameters
 	vmail=$(db_input high $packageroot/VMAIL;db_go;db_get $packageroot/VMAIL;echo $RET)
 	useradd $vmail || true
-	db_set $packageroot/UID $(id -u $vmail)
-	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/uid medium
-	db_set $packageroot/GID $(id -u $vmail)
-	varsubst $packageroot /etc/$packageroot/$package/postfix/virtual/gid medium
+        userid=$(id -u $vmail)
+	gid=$userid
+
 	ln -s /etc/$packageroot/$package/postfix/virtual /etc/postfix
 
 	# link to virtual mail box root
 	install -dD -o vmail -g vmail /var/$packageroot/$package/mail/virtual 
 	ln -s /var/$packageroot/$package/mail/virtual /var/mail
 
+	#encrypt mail root and subdirs
+	pass=$(db_input high $packageroot/MAILDIRECRYPTPASS;db_go;db_get $packageroot/MAILDIRECRYPTPASS;echo $RET)
+	
 	# override the sasl auth config to use preferred auth mechanism
 	mv /etc/default/saslauthd /etc/default/saslauthd.bak || true
 	ln -s /etc/$packageroot/$package/default/saslauthd /etc/default
 
-	#hostname=$(db_input high $packageroot/HOSTNAME;db_go;db_get $packageroot/HOSTNAME;echo $RET)
-	hostname=$(db_get postfix/mailname;echo $RET)
+	hostname=$(db_input high $packageroot/HOSTNAME;db_go;db_get $packageroot/HOSTNAME;echo $RET)
+	#hostname=$(db_get postfix/mailname;echo $RET)
 	virtualdomains=$(db_input high $packageroot/VIRTUALDOMAINS;db_go;db_get $packageroot/VIRTUALDOMAINS;echo $RET)
+
+	mailboxes=$(db_input high $packageroot/MAILBOXES;db_go;db_get $packageroot/MAILBOXES;echo $RET)
+	IFS=,
+	for mailbox in $mailboxes
+	do
+    		IFS=@
+    		i=0
+    		for token in $mailbox
+    		do
+       			eval tokens${i}=$token
+       			i=`expr $i + 1`
+    		done
+		echo "$mailbox" $tokens1/$tokens0/Maildir >> /etc/$packageroot/$package/postfix/virtual/mailbox
+		echo "$mailbox" $userid >> /etc/$packageroot/$package/postfix/virtual/uid
+		echo "$mailbox" $gid >> /etc/$packageroot/$package/postfix/virtual/gid
+	done
 
         db_stop
 
@@ -76,7 +94,6 @@ case "$1" in
 		'virtual_gid_maps = hash:/etc/postfix/virtual/gid'
 
 	#build db's now
-	postmap /etc/$packageroot/$package/postfix/virtual/addresses
 	postmap /etc/$packageroot/$package/postfix/virtual/mailbox
 	postmap /etc/$packageroot/$package/postfix/virtual/uid
 	postmap /etc/$packageroot/$package/postfix/virtual/gid

@@ -26,3 +26,13 @@ Type: string
 Description: Virtual domains handled by this postfix (ex. someemail@<this virtual domain>)
  Any virtual domains for incoming emails handled by this server
 
+Template: bit9/MAILDIRECRYPTPASS
+Type: password
+Description: Password to encrypt/decrypt mailbox root folder
+ Used to scramble all mail messages realtime stored on disk
+
+Template: bit9/MAILBOXES
+Type: string
+Description: Comma-separated list of emails/mailboxes to create
+ In the format <username>@<a virtualdomain>
+
