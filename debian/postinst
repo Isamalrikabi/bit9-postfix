@@ -61,7 +61,7 @@ case "$1" in
        			eval tokens${i}=$token
        			i=`expr $i + 1`
     		done
-		echo "$mailbox" $tokens1/$tokens0/Maildir >> /etc/$packageroot/$package/postfix/virtual/mailbox
+		echo "$mailbox" $tokens1/$tokens0/Maildir/ >> /etc/$packageroot/$package/postfix/virtual/mailbox
 		echo "$mailbox" $userid >> /etc/$packageroot/$package/postfix/virtual/uid
 		echo "$mailbox" $gid >> /etc/$packageroot/$package/postfix/virtual/gid
 	done
@@ -73,6 +73,9 @@ case "$1" in
 
         openssl genrsa -out $key 2048
         openssl req -new -key $key -subj "/C=US/ST=Texas/L=Austin/O=Global Security/OU=IT Department/CN=bit9.io" | openssl x509 -req -days 365 -signkey $key -out $cert
+
+	chown postfix:postfix $key
+	chmod 400 $key
 
 	#add starttls support, and map virtual dirs
 	postconf -e \
