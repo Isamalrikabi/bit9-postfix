@@ -33,6 +33,9 @@ case "$1" in
         userid=$(id -u $vmail)
 	gid=$userid
 
+	#be sure postfix is in sasl group to authenticate
+	adduser postfix sasl || true
+
 	ln -s /etc/$packageroot/$package/postfix/virtual /etc/postfix
 
 	# link to virtual mail box root
@@ -64,6 +67,7 @@ case "$1" in
 		echo "$mailbox" $tokens1/$tokens0/Maildir/ >> /etc/$packageroot/$package/postfix/virtual/mailbox
 		echo "$mailbox" $userid >> /etc/$packageroot/$package/postfix/virtual/uid
 		echo "$mailbox" $gid >> /etc/$packageroot/$package/postfix/virtual/gid
+		useradd "$mailbox" || true
 	done
 
         db_stop
@@ -87,6 +91,8 @@ case "$1" in
 		'smtp_tls_security_level = may' \
 		'smtp_tls_loglevel = 1' \
 		'smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache' \
+		'smtpd_sasl_type = cyrus' \
+		'smtpd_sasl_auth_enable = yes' \
 		'tls_random_source = dev:/dev/urandom' \
 		"myhostname = ${hostname}" \
 		'mydestination = localhost.localdomain, localhost' \
@@ -106,6 +112,10 @@ case "$1" in
 	ln -s /etc/$packageroot/$package/postfix/sender_access /etc/postfix/sender_access
 	ln -s /etc/$packageroot/$package/postfix/sender_access.db /etc/postfix/sender_access.db
 
+	#sasl authentication configuration
+	ln -s /etc/$packageroot/$package/postfix/sasl/smtpd.conf /etc/postfix/sasl/smtpd.conf
+
+        service saslauthd restart
         service postfix restart
     ;;
 
