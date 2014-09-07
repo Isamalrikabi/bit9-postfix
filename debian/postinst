@@ -42,9 +42,6 @@ case "$1" in
 	install -dD -o vmail -g vmail /var/$packageroot/$package/mail/virtual 
 	ln -s /var/$packageroot/$package/mail/virtual /var/mail
 
-	#encrypt mail root and subdirs
-	pass=$(db_input high $packageroot/MAILDIRECRYPTPASS;db_go;db_get $packageroot/MAILDIRECRYPTPASS;echo $RET)
-	
 	# override the sasl auth config to use preferred auth mechanism
 	mv /etc/default/saslauthd /etc/default/saslauthd.bak || true
 	ln -s /etc/$packageroot/$package/default/saslauthd /etc/default
